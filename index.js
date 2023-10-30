@@ -175,8 +175,8 @@ async function run() {
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
-          name: data.name,
-          image: data.image,
+          service: data.name,
+          imageLink: data.image,
           description: data.description,
         },
       };
@@ -194,27 +194,29 @@ async function run() {
       res.send(result);
     });
 
-    
+
     // review services information
     // review services information
 
+    const ReviewCollection=client.db("Alamin").collection("Review");
+
     // get services information
-    app.get("/services", async (req, res) => {
-      const result = await servicesCollection.find().toArray();
+    app.get("/review", async (req, res) => {
+      const result = await ReviewCollection.find().toArray();
       res.send(result);
     });
 
     // add services information
 
-    app.post("/service/add", async (req, res) => {
+    app.post("/review/add", async (req, res) => {
       const data = req.body;
-      const result = await servicesCollection.insertOne(data);
+      const result = await ReviewCollection.insertOne(data);
       res.send(result);
     });
 
     // update services information
 
-    app.put("/service/update", async (req, res) => {
+    app.put("/review/update", async (req, res) => {
       const id = req.params.id;
       const data = req.body;
       const filter = { _id: new ObjectId(id) };
@@ -226,16 +228,16 @@ async function run() {
         },
       };
 
-      const result = await servicesCollection.updateOne(filter, updateDoc);
+      const result = await ReviewCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
 
     // delete services information
 
-    app.delete("/service/delete", async (req, res) => {
+    app.delete("review/delete", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
-      const result = servicesCollection.deleteOne(filter);
+      const result = ReviewCollection.deleteOne(filter);
       res.send(result);
     });
 
