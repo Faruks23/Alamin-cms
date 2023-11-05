@@ -3,7 +3,7 @@ const app = express();
 const port =process.env|5000;
 const cors = require("cors");
 require("dotenv").config();
-app.use(cors())
+
 app.use(express.json());
 
 
@@ -12,7 +12,12 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
+const corsOptions = {
+  origin: "http://localhost:5173", // Replace with your React app's origin
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+};
 
+app.use(cors(corsOptions));
 
 //  mongodb  connection
 
@@ -31,7 +36,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     // collection
     const userCollection = client.db("Alamin").collection("users");
@@ -173,7 +178,7 @@ async function run() {
       const id = req.params.id;
       const data = req.body;
       const filter = { _id: new ObjectId(id) };
-      const updateDoc = {
+      const updateDoc  = {
         $set: {
           service: data.name,
           imageLink: data.image,
@@ -188,10 +193,13 @@ async function run() {
     // delete services information
 
     app.delete("/service/delete", async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const result = servicesCollection.deleteOne(filter);
-      res.send(result);
+      const { selectedService } = req.body;
+      // Convert selectedServiceIds to ObjectId
+      console.log(selectedService);
+      const objectIds = selectedService.map((id) => new ObjectId(id));
+      const filter ={_id:{$in:objectIds} };
+      const result = await servicesCollection.deleteMany(filter);
+        res.send(result)
     });
 
 
