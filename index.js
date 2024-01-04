@@ -12,12 +12,12 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-const corsOptions = {
-  origin: "http://localhost:5173", // Replace with your React app's origin
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-};
+// const corsOptions = {
+//   origin: "http://localhost:5173", // Replace with your React app's origin
+//   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+// };
 
-app.use(cors(corsOptions));
+app.use(cors());
 
 //  mongodb  connection
 
@@ -42,6 +42,8 @@ async function run() {
     const userCollection = client.db("Alamin").collection("users");
     const SocialCollection = client.db("Alamin").collection("Social");
     const servicesCollection = client.db("Alamin").collection("services");
+    const TeamsCollection = client.db("Alamin").collection("Team");
+
     // save user information
 
     // save user information
@@ -82,7 +84,7 @@ async function run() {
 
     // get social media information
     app.get("/social", async (req, res) => {
-      const result = SocialCollection.find().toArray();
+      const result = await SocialCollection.find().toArray();
       res.send(result);
     });
     // add social media information
@@ -93,14 +95,16 @@ async function run() {
       res.send(result);
     });
     // update social information
-    app.put("/Social/update", async (req, res) => {
+    app.put("/Social/update/:id", async (req, res) => {
       const id = req.params.id;
       const data = req.body;
+      console.log(data);
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
-          name: data.name,
-          Link: data.link,
+          name: data.editData.name,
+          link: data.editData.link,
+          image: data.images,
         },
       };
       const result = await SocialCollection.updateOne(filter, updateDoc);
@@ -108,13 +112,13 @@ async function run() {
     });
 
     // delete social information
-    app.delete("/Social/delete", async (req, res) => {
+    app.delete("/Social/delete/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
-      const result = SocialCollection.deleteOne(filter);
+      const result = await SocialCollection.deleteOne(filter);
       res.send(result);
     });
-
+ 
     // get Project information
     const ProjectCollection = client.db("Alamin").collection("Project");
 
@@ -133,13 +137,13 @@ async function run() {
 
     // update Project information
 
-    app.put("/Project/update", async (req, res) => {
+    app.put("/Project/update/:id", async (req, res) => {
       const id = req.params.id;
       const data = req.body;
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
-          name: data.name,
+          ProjectName: data.name,
           image: data.image,
           description: data.description,
         },
@@ -151,12 +155,17 @@ async function run() {
 
     // delete Project information
 
-    app.delete("/Project/delete", async (req, res) => {
-      const id = req.params.id;
-      const filter = { _id: new ObjectId(id) };
-      const result = ProjectCollection.deleteOne(filter);
+    app.delete("/project/delete", async (req, res) => {
+      const { selectedService } = req.body;
+      // Convert selectedServiceIds to ObjectId
+      console.log(selectedService);
+      const objectIds = selectedService.map((id) => new ObjectId(id));
+      const filter = { _id: { $in: objectIds } };
+      const result = await ProjectCollection.deleteMany(filter);
       res.send(result);
     });
+
+    
 
     // get services information
     app.get("/services", async (req, res) => {
@@ -174,7 +183,7 @@ async function run() {
 
     // update services information
 
-    app.put("/service/update", async (req, res) => {
+    app.put("/service/update/:id", async (req, res) => {
       const id = req.params.id;
       const data = req.body;
       const filter = { _id: new ObjectId(id) };
@@ -249,8 +258,13 @@ async function run() {
       res.send(result);
     });
 
-    // review services information
-    // review services information
+    // Team members information
+
+    app.get('/team/members', async (req, res) => { 
+      const result = await TeamsCollection.find().toArray();
+      res.send(result);
+    })
+ 
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
