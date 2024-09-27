@@ -1,28 +1,27 @@
 const express = require("express");
 const app = express();
-const port =process.env|5000;
+const port = process.env | 5000;
 const cors = require("cors");
+
 require("dotenv").config();
 
 app.use(express.json());
-
-
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-// const corsOptions = {
-//   origin: "http://localhost:5173", // Replace with your React app's origin
-//   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-// };
+app.use(cors({
+  origin: '*',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  optionsSuccessStatus: 204,
+}));
 
-app.use(cors());
+const { MongoClient, ServerApiVersion } = require("mongodb");
 
-//  mongodb  connection
-
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const uri = `mongodb+srv://${process.env.DB_Name}:${process.env.DB_KEY}@cluster0.1fsmjmg.mongodb.net/?retryWrites=true&w=majority`;
+  const uri =
+    "mongodb+srv://mdfarukoffical1:faruksp@cluster0.mrt1a.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -36,14 +35,14 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
+    await client.connect();
 
     // collection
     const userCollection = client.db("Alamin").collection("users");
     const SocialCollection = client.db("Alamin").collection("Social");
     const servicesCollection = client.db("Alamin").collection("services");
-    const TeamsCollection = client.db("Alamin").collection("Team");
-
+    const TeamsCollection = client.db("Alamin").collection("team");
+   const ReviewCollection = client.db("Alamin").collection("reviews");
     // save user information
 
     // save user information
@@ -118,9 +117,9 @@ async function run() {
       const result = await SocialCollection.deleteOne(filter);
       res.send(result);
     });
- 
+
     // get Project information
-    const ProjectCollection = client.db("Alamin").collection("Project");
+    const ProjectCollection = client.db("Alamin").collection("projects");
 
     app.get("/Project", async (req, res) => {
       const result = await ProjectCollection.find().toArray();
@@ -165,8 +164,6 @@ async function run() {
       res.send(result);
     });
 
-    
-
     // get services information
     app.get("/services", async (req, res) => {
       const result = await servicesCollection.find().toArray();
@@ -187,7 +184,7 @@ async function run() {
       const id = req.params.id;
       const data = req.body;
       const filter = { _id: new ObjectId(id) };
-      const updateDoc  = {
+      const updateDoc = {
         $set: {
           service: data.name,
           imageLink: data.image,
@@ -206,21 +203,30 @@ async function run() {
       // Convert selectedServiceIds to ObjectId
       console.log(selectedService);
       const objectIds = selectedService.map((id) => new ObjectId(id));
-      const filter ={_id:{$in:objectIds} };
+      const filter = { _id: { $in: objectIds } };
       const result = await servicesCollection.deleteMany(filter);
-        res.send(result)
+      res.send(result);
     });
 
-
     // review services information
     // review services information
 
-    const ReviewCollection=client.db("Alamin").collection("Review");
+  
 
     // get services information
+    
     app.get("/review", async (req, res) => {
-      const result = await ReviewCollection.find().toArray();
-      res.send(result);
+      try {
+         const result = await ReviewCollection.find().toArray();
+        res.status(200).json({
+          message:"reviews got successfully",
+            data:result
+          })
+      } catch (error) {
+        res.status(400).json({
+           error: error.message
+         })
+      }
     });
 
     // add services information
@@ -258,13 +264,29 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/review/count", async (req, res) => {
+      try {
+        const count = await ReviewCollection.countDocuments();
+        console.log("Review count:", count);
+        res.status(200).json({
+          message: "Review count retrieved successfully",
+          count: count,
+        });
+      } catch (error) {
+        console.error("Error counting reviews:", error);
+        res.status(400).json({
+          error: error.message,
+        });
+      }
+    });
+
+
     // Team members information
 
-    app.get('/team/members', async (req, res) => { 
+    app.get("/team/members", async (req, res) => {
       const result = await TeamsCollection.find().toArray();
       res.send(result);
-    })
- 
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -278,8 +300,7 @@ async function run() {
 }
 run().catch(console.dir);
 
-
-
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
+
