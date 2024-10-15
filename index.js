@@ -1,27 +1,34 @@
+const { MongoClient, ServerApiVersion } = require("mongodb");
 const express = require("express");
 const app = express();
-const port = process.env | 5000;
+const port = 5000; // Corrected the port assignment
 const cors = require("cors");
 
 require("dotenv").config();
 
 app.use(express.json());
 
+
+app.use(
+  cors({
+    origin: "*",
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+    optionsSuccessStatus: 204,
+  })
+);
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-app.use(cors({
-  origin: '*',
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: true,
-  optionsSuccessStatus: 204,
-}));
+app.use((req, res, next) => {
+  res.status(404).send("Not Found");
+});
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
 
-  const uri =
-    "mongodb+srv://mdfarukoffical1:faruksp@cluster0.mrt1a.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+
+const uri =
+  "mongodb+srv://mdfarukoffical1:faruksp@cluster0.mrt1a.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -42,7 +49,7 @@ async function run() {
     const SocialCollection = client.db("Alamin").collection("Social");
     const servicesCollection = client.db("Alamin").collection("services");
     const TeamsCollection = client.db("Alamin").collection("team");
-   const ReviewCollection = client.db("Alamin").collection("reviews");
+    const ReviewCollection = client.db("Alamin").collection("reviews");
     // save user information
 
     // save user information
@@ -211,21 +218,19 @@ async function run() {
     // review services information
     // review services information
 
-  
-
     // get services information
-    
+
     app.get("/review", async (req, res) => {
       try {
-         const result = await ReviewCollection.find().toArray();
+        const result = await ReviewCollection.find().toArray();
         res.status(200).json({
-          message:"reviews got successfully",
-            data:result
-          })
+          message: "reviews got successfully",
+          data: result,
+        });
       } catch (error) {
         res.status(400).json({
-           error: error.message
-         })
+          error: error.message,
+        });
       }
     });
 
@@ -280,7 +285,6 @@ async function run() {
       }
     });
 
-
     // Team members information
 
     app.get("/team/members", async (req, res) => {
@@ -295,7 +299,7 @@ async function run() {
     );
   } finally {
     // Ensures that the client will close when you finish/error
-    // await client.close();
+    await client.close();
   }
 }
 run().catch(console.dir);
@@ -303,4 +307,3 @@ run().catch(console.dir);
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
-
