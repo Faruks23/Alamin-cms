@@ -21,9 +21,6 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-app.use((req, res, next) => {
-  res.status(404).send("Not Found");
-});
 
 
 
@@ -173,6 +170,7 @@ async function run() {
 
     // get services information
     app.get("/services", async (req, res) => {
+    
       const result = await servicesCollection.find().toArray();
       res.send(result);
     });
@@ -299,10 +297,15 @@ async function run() {
     );
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
+    // await client.close();
   }
 }
 run().catch(console.dir);
+
+// app.use((req, res, next) => {
+//   res.status(404).send("Not Found");
+// });
+
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
